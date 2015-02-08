@@ -21,6 +21,7 @@
 			$(".vol-progress-wrap,.vol-progress-buffer").on('click',this.volumeSeek);
 			$(".progress-wrap,.progress-buffer").on('click',this.seek);
 			$(".fullScreenCls").on("click",this.fullScreen)
+			$('video').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', this.fullScreenStyle);
 			videoTags.parent().find(".playBtn").show();
 			videoTags.parent().find(".pause").hide();
 			$(".genVideo").hover(function(){
@@ -28,9 +29,10 @@
 			},function(){
 			    $('.playerCtrl').fadeOut();
 			});
-			//$(".playBtn").on('click',this.play);
-			
-
+			genVideo.moveProgressBar(0);
+			$(window).resize(function() {
+				genVideo.moveProgressBar(0);
+			});
 		},
 		ended : function(e){
 			var videoTagsEl = $(e.target.parentNode);
@@ -40,61 +42,45 @@
 		},
 		durationchange : function(e){
 			var videoTagsEl = $(e.target);
-			//videoTagsEl[0].volume = 0.25;
-			//moveVolProgressBar(0.25);
-			//videoTagsEl.siblings(".durationCls").html(videoTagsEl[0].currentTime +" / "+ videoTagsEl[0].duration);
-			
 		},
-		fullScreen : function(e){
+		fullScreen : function(e) {
 			var currentElement = $(e.target).parents().find("video")[0];
-			
-			if (currentElement.requestFullscreen) {
-				if(currentElement.displayingFullscreen){
-					currentElement.exitFullscreen();
-					genVideo.exitScreenStyle(e);
-				}else{
-					currentElement.requestFullscreen();
-					genVideo.fullScreenStyle(e);
+			if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  
+				if (currentElement.requestFullscreen) {
+				  currentElement.requestFullscreen();
+				} else if (currentElement.msRequestFullscreen) {
+				  currentElement.msRequestFullscreen();
+				} else if (currentElement.mozRequestFullScreen) {
+				  currentElement.mozRequestFullScreen();
+				} else if (currentElement.webkitRequestFullscreen) {
+				  currentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
 				}
-			} else if (currentElement.msRequestFullscreen) {
-				if(currentElement.msDisplayingFullscreen){
-					currentElement.msExitFullscreen();
-					genVideo.exitScreenStyle(e);
-				}else{
-					currentElement.msRequestFullscreen();
-					genVideo.fullScreenStyle(e);
-				}
-			  
-			} else if (currentElement.mozRequestFullScreen) {
-				if(currentElement.mozDisplayingFullscreen){
-					currentElement.mozExitFullScreen();
-					genVideo.exitScreenStyle(e);
-				}else{
-					currentElement.mozRequestFullScreen();
-					genVideo.fullScreenStyle(e);
-				}
-			} else if (currentElement.webkitRequestFullscreen) {
-				if(currentElement.webkitDisplayingFullscreen){
-					currentElement.webkitExitFullscreen();
-					genVideo.exitScreenStyle(e);
-				}else{
-					currentElement.webkitRequestFullscreen();
-					genVideo.fullScreenStyle(e);					
-				}
-			  
+				
+			} else {
+				if (document.exitFullscreen) {
+				  currentElement.exitFullscreen();
+				} else if (document.msExitFullscreen) {
+				  currentElement.msExitFullscreen();
+				} else if (document.mozCancelFullScreen) {
+				  currentElement.mozCancelFullScreen();
+				} else if (document.webkitExitFullscreen) {
+				  currentElement.webkitExitFullscreen();
+				}				
 			}
+			genVideo.fullScreenStyle(e);
 		},
 		fullScreenStyle : function(e){
-			var currentVideoCtrl = $(e.target).parents().find(".playerCtrl");
-			genVideo.originalWidth = $(e.target).parents().find(".genVideo").css("width");
-			$(e.target).parents().find(".genVideo").css({ width:"auto",marginTop : screen.height});
-			currentVideoCtrl.css({width : "250px"});
-		},
-		exitScreenStyle : function(e){
-			var currentVideoCtrl = $(e.target).parents().find(".playerCtrl");
-			$(e.target).parents().find(".genVideo").css({ width:genVideo.originalWidth,marginTop : "0px"});
-			currentVideoCtrl.css({width : "160px"});
-
+			var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
+    		if(state){
+    			var currentVideoCtrl = $(e.target).parents().find(".playerCtrl");
+				genVideo.originalWidth = $(e.target).parents().find(".genVideo").css("width");
+				$(e.target).parents().find(".genVideo").css({ width:"auto",marginTop : screen.height});
+				currentVideoCtrl.css({width : "250px"});
+    		}else{
+    			var currentVideoCtrl = $(e.target).parents().find(".playerCtrl");
+				$(e.target).parents().find(".genVideo").css({ width:genVideo.originalWidth,marginTop : "0px"});
+				currentVideoCtrl.css({width : "160px"});
+    		}			
 		},
 		timeUpdate : function(e){
 			var currentElement = $(this)[0];
@@ -103,7 +89,6 @@
 			genVideo.moveBufferProgressBar(genVideo.timeRangesToString(currentElement.buffered)/currentElement.duration)
 		},
 		seek : function(e){
-			console.log($(e.target.parentNode).has("video").length);
 			if($(e.target.parentNode).has("video").length){
 				var currentElement = $(e.target).siblings("video")[0];
 				var previosLeft = 0;
@@ -114,9 +99,7 @@
 			var leftOffset = parseInt(e.offsetX) + previosLeft;
 			var getProgressWrapWidth = $('.progress-wrap').width();
 			var currentTime = (leftOffset/getProgressWrapWidth)*currentElement.duration;
-			console.log(currentTime,getProgressWrapWidth,currentElement.duration,leftOffset)
 			currentElement.currentTime = currentTime;
-
 		},
 		volumeSeek:function(e){
 			var previosLeft = 0;
@@ -138,19 +121,15 @@
 			genVideo.moveVolProgressBar(currentElement.volume)
 			if(genVideo._pause){
 				currentElement.play();
-				//$(this).html("Pause");
 				$(this).find(".pause").show();
 				$(this).find(".playBtn").hide();
 				genVideo._pause = false;	
 			}else{
 				currentElement.pause();
-				//$(this).html("Play");
 				$(this).find(".playBtn").show();
 				$(this).find(".pause").hide();
-				
 				genVideo._pause = true;
 			}
-			
 		},
 		volume : function(e){
 			var currentElement = $(e.target).parents(".playerCtrl").siblings("video")[0];
@@ -193,19 +172,16 @@
 					}
 					break;
 				default:
-					console.log("others")
 					break;
 			}
 			genVideo.moveVolProgressBar(currentElement.volume)
 		},
 		el : function(selector){
-		},//Attach video tag to 
+		},
 		attachVideoTag : function(el){
 			
 		},
-		// Buffer timer calculation 
-
-	    timeRangesToString : function(r) {
+		timeRangesToString : function(r) {
 		  var log = "";
 		  for (var i=0; i<r.length; i++) {
 		    log = r.end(i);
@@ -213,40 +189,25 @@
 		  return log;
 		},
 		moveProgressBar : function(progress) {
-        //var getPercent = ($('.progress-wrap').data('progress-percent') / 100);
 	        var getPercent = progress;
 	        var getProgressWrapWidth = $('.progress-wrap').width();
 	        var progressTotal = getPercent * getProgressWrapWidth;
-	        //var animationLength = (progress*400);
-	        
-	        // on page load, animate percentage bar to data percentage length
-	        // .stop() used to prevent animation queueing
 	        $('.progress-buffer').stop().animate({
 	            left: progressTotal
 	        });
     	},
     	moveVolProgressBar : function(progress) {
-	        //var getPercent = ($('.progress-wrap').data('progress-percent') / 100);
 	        var getPercent = progress;
 	        var getProgressWrapWidth = $('.vol-progress-wrap').width();
 	        var progressTotal = getPercent * getProgressWrapWidth;
-	        //var animationLength = (progress*400);
-	        
-	        // on page load, animate percentage bar to data percentage length
-	        // .stop() used to prevent animation queueing
 	        $('.vol-progress-bar').stop().animate({
 	            left: progressTotal
 	        });
     	},
     	moveBufferProgressBar : function(progress) {
-	        //var getPercent = ($('.progress-wrap').data('progress-percent') / 100);
-	        var getPercent = progress;
+	         var getPercent = progress;
 	        var getProgressWrapWidth = $('.progress-wrap').width();
 	        var progressTotal = getPercent * getProgressWrapWidth;
-	        //var animationLength = (progress*400);
-	        
-	        // on page load, animate percentage bar to data percentage length
-	        // .stop() used to prevent animation queueing
 	        $('.progress-bar').stop().animate({
 	            left: progressTotal
 	        });
@@ -254,13 +215,7 @@
 
 		}
 	})(window);
-	console.log(genVideo)
 	genVideo.init();
-	// on page load...
-    genVideo.moveProgressBar(0);
-    // on browser resize...
-    $(window).resize(function() {
-        genVideo.moveProgressBar(0);
-    });
+	
 
     
