@@ -215,7 +215,9 @@
 
 		}
 	})(window);
-	genVideo.init();
+
+	
+	
 	
 
     
