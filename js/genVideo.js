@@ -24,9 +24,9 @@
 			videoTags.parent().find(".playBtn").show();
 			videoTags.parent().find(".pause").hide();
 			$(".genVideo").hover(function(){
-    			//$('.playerCtrl').fadeIn();
+    			$('.playerCtrl').fadeIn();
 			},function(){
-			   // $('.playerCtrl').fadeOut();
+			    $('.playerCtrl').fadeOut();
 			});
 			//$(".playBtn").on('click',this.play);
 			

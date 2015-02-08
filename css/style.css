@@ -47,7 +47,7 @@
 	margin: -70px auto;
 	border-radius: 5px;
 	z-index: 214748364090;
-	/*display: none*/;
+	display: none;
 }
 .playerCtrl:hover{
 	display: block;
